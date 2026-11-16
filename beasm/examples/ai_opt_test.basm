@@ -1,0 +1,19 @@
+; ═══════════════════════════════════════════════════════════════════════════
+; ai_opt_test.basm — uji track AI beasm (-EnAI -OAI<n> --bcm)
+; Pola yang harus kena transformasi (model builtin + hasil collect):
+;   add rax,rax        → shl rax,1        (add_r_r_to_shl)
+;   imul rax,rax,8     → shl rax,3        (mul_imm2_to_shl)
+;   mov rax,0          → xor rax,rax      (xor_zero_clear)
+;   lea rax,[rax+1]    → inc rax          (lea_add_to_inc)
+; ═══════════════════════════════════════════════════════════════════════════
+
+section '.text' code executable
+
+_start:
+    add rax, rax
+    imul rax, rax, 8
+    mov rax, 0
+    lea rax, [rax+1]
+    ret
+
+BERRY_EXPORT _start

@@ -1,0 +1,50 @@
+arch riscv64
+section .text
+_start:
+    nop
+    addi x0, x0, 0
+    addi x10, x0, 42
+    addi x11, x0, 58
+    add x12, x10, x11
+    sub x13, x10, x11
+    addiw x14, x10, 1
+    addw x15, x10, x11
+    subw x16, x10, x11
+    slli x17, x10, 2
+    srli x18, x10, 1
+    srai x19, x10, 1
+    sll x20, x10, x11
+    srl x21, x10, x11
+    sra x22, x10, x11
+    and x23, x10, x11
+    or x24, x10, x11
+    xor x25, x10, x11
+    slt x26, x10, x11
+    sltu x27, x10, x11
+    slti x28, x10, 100
+    sltiu x29, x10, 100
+    xori x30, x10, -1
+    ori x31, x10, 0xFF
+    andi x10, x10, 0x0F
+    lui x11, 0x10000
+    auipc x12, 0
+    beq x10, x11, .no
+    bne x10, x11, .ok
+.no:
+    addi x10, x0, 1
+    ecall
+.ok:
+    jal x0, .ok
+    jalr x0, x1, 0
+    ecall
+    ebreak
+    fence
+    rdcycle x0
+    rdtime x0
+    rdinstret x0
+    mul x0, x10, x11
+    div x0, x10, x11
+    rem x0, x10, x11
+    mulh x0, x10, x11
+    divu x0, x10, x11
+    remu x0, x10, x11

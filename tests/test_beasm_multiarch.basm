@@ -1,0 +1,42 @@
+; ═══════════════════════════════════════════════════════════════════════════
+; test_beasm_multiarch.basm — Multi-Architecture Assembly Test
+; ═══════════════════════════════════════════════════════════════════════════
+; Tests all 7 architectures supported by BeASM.
+; Assemble with: beasm tests/test_beasm_multiarch.basm -o /tmp/test_multi.befb --format befb
+; ═══════════════════════════════════════════════════════════════════════════
+
+; --- x86_64 (default) ---
+section .text
+_start:
+    nop
+    mov rax, 42
+    mov rbx, 58
+    add rax, rbx
+    sub rax, rbx
+    mov rcx, 100
+    imul rax, rcx
+    cmp rax, 4200
+    syscall
+    ret
+    int 0x80
+    hlt
+    cli
+    sti
+    cld
+    std
+    push rax
+    pop rbx
+    lea rdi, [rbx+8]
+    xor rax, rax
+    or rax, rcx
+    and rax, rcx
+    shl rax, 2
+    shr rax, 1
+    bswap rax
+    pause
+    mfence
+    lfence
+    sfence
+    cpuid
+    rdtsc
+    ud2

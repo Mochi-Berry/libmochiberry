@@ -1,0 +1,40 @@
+{
+  "format": 1,
+  "package": "my.berrylabfoundation.mochiberry",
+  "engine": "libmochiberry",
+  "version": "0.1.0",
+  "engine_version": "0.16.1",
+  "abi": "mbjs-bytecode-1",
+  "upgrade": {
+    "type": "swap",
+    "no_recode": true,
+    "rollback": "previous"
+  },
+  "files": {
+    "app.mbc": {
+      "sha256": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+      "size": 2048,
+      "role": "app-bytecode"
+    },
+    "app.js": {
+      "sha256": "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210",
+      "size": 4096,
+      "role": "app-source"
+    },
+    "libmochiberry.so": {
+      "sha256": "aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899",
+      "size": 1318136,
+      "role": "engine"
+    },
+    "patches/patch_ecma2025.js": {
+      "sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+      "size": 3072,
+      "role": "patch"
+    },
+    "patches/patch_ecma2026.js": {
+      "sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+      "size": 2048,
+      "role": "patch"
+    }
+  }
+}

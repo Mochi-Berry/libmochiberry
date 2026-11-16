@@ -1,0 +1,25 @@
+arch arm64
+section .text
+_start:
+    nop
+    mov x0, 42
+    mov x1, 58
+    add x2, x0, x1
+    sub x3, x1, x0
+    cmp x2, 100
+    svc 0
+    ret
+    mov x30, x0
+    br x30
+    blr x30
+    push x0
+    pop x1
+    and x2, x0, x1
+    orr x3, x0, x1
+    eor x4, x0, x1
+    wfi
+    wfe
+    sev
+    isb
+    dsb
+    dmb

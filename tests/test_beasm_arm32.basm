@@ -1,0 +1,24 @@
+arch arm32
+section .text
+_start:
+    nop
+    mov r0, 42
+    mov r1, 58
+    add r2, r0, r1
+    sub r3, r1, r0
+    mul r4, r2, r0
+    cmp r2, 100
+    svc 0x900001
+    bx lr
+    push r0
+    pop r1
+    and r2, r0, r1
+    orr r3, r0, r1
+    eor r4, r0, r1
+    wfi
+    wfe
+    sev
+    isb
+    dsb
+    dmb
+    ret

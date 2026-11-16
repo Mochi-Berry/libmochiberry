@@ -1,0 +1,63 @@
+; ═══════════════════════════════════════════════════════════════════════════
+; hello.basm — "Hello Berry!" untuk UBerryNix
+; ═══════════════════════════════════════════════════════════════════════════
+;
+; Contoh program pertama menggunakan beasm (Berry Assembler).
+; Dirakit oleh beasm.c (assembler dua-pass x86_64) — TIDAK butuh fasmg:
+;
+;   beasm hello.basm -o hello.bex  --format bex  --entry _start
+;   beasm hello.basm -o hello.befb --format befb --entry _start --token BEFB_00001
+;
+; Output mengikuti grammar biner kernel (kernel/include/bex_format.h /
+; befb_format.h): magic 8-byte, header, tabel seksi 16 B, .exports 12 B.
+;
+; ═══════════════════════════════════════════════════════════════════════════
+
+; ── Target: x86_64 (default beasm) ──
+
+; ═══════════════════════════════════════════════════════════════════════════
+; Code
+; ═══════════════════════════════════════════════════════════════════════════
+
+section '.text' code executable
+
+_start:
+    ; ── Print "Hello Berry!" via SYS_BERRY_SOW (0x02) ──
+    ;   rdi = fd (1 = stdout)
+    ;   rsi = buffer
+    ;   rdx = length
+    mov rdi, 1
+    lea rsi, [rel hello_msg]
+    mov rdx, hello_len
+    mov rax, 0x02
+    syscall
+
+    ; ── Exit via SYS_BERRY_WITHER (0x05) ──
+    mov rdi, 0
+    mov rax, 0x05
+    syscall
+
+    ; ── Idle loop (tidak akan tercapai) ──
+.loop:
+    hlt
+    jmp .loop
+
+; ═══════════════════════════════════════════════════════════════════════════
+; Data
+; ═══════════════════════════════════════════════════════════════════════════
+
+section '.rodata' data readable
+
+hello_msg db 'Hello Berry from beasm!', 13, 10, 0
+hello_len = $ - hello_msg
+
+; ═══════════════════════════════════════════════════════════════════════════
+; Export Table (auto-generated hash oleh makro BERRY_EXPORT)
+; ═══════════════════════════════════════════════════════════════════════════
+
+section '.exports' data readable
+
+BERRY_EXPORT _start, 1
+
+; Terminator .exports — 12 B nol { fn_hash=0, entry_off=0, flags=0, rsv=0 }
+dd 0, 0, 0

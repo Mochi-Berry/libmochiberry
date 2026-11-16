@@ -1,0 +1,31 @@
+{
+  "name": "@mochiberry/example",
+  "version": "1.0.0",
+  "description": "Example TGPM package manifest",
+  "type": "module",
+  "exports": {
+    ".": {
+      "mbjs": "./dist/mbjs/index.js",
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js",
+      "browser": "./dist/browser/index.js",
+      "default": "./dist/index.js"
+    },
+    "./feature": "./dist/feature.js",
+    "./plugins/*": "./dist/plugins/*.js"
+  },
+  "dependencies": {
+    "left-pad": "^1.1.0"
+  },
+  "devDependencies": {
+    "test-runner": "^2.0.0"
+  },
+  "scripts": {
+    "test": "mbjs test.js",
+    "build": "mbjsc -m -o dist/index.cjs src/index.js"
+  },
+  "tgpm": {
+    "linkMode": "linked",
+    "registry": "https://example.invalid/tgpm"
+  }
+}

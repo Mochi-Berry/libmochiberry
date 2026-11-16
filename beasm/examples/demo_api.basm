@@ -1,0 +1,105 @@
+; ═══════════════════════════════════════════════════════════════════════════
+; demo_api.basm — Demonstrasi 3 Pilar API beasm
+; ═══════════════════════════════════════════════════════════════════════════
+;
+; Menunjukkan penggunaan (di dalam OS, makro-makro ini dipetakan ke
+; syscall/berrycall yang sesuai TARGET_ARCH):
+;   1. nano_call — Nano Kernel ABI (syscall)
+;   2. lbrt_invoke — LBRT API (hash-based dynamic linking)
+;   3. gui_send — GUI App API (berrycall COMP_CALL → libbfb)
+;
+; Dirakit oleh beasm.c (assembler dua-pass x86_64):
+;   beasm demo_api.basm -o demo_api.befb --format befb --entry _start
+;   beasm demo_api.basm -o demo_api.bex  --format bex  --entry _start
+;
+; ═══════════════════════════════════════════════════════════════════════════
+
+; ── Target: x86_64 (default beasm) ──
+
+; ── Konstanta syscall (sinkron kernel/include/syscall.h) ──
+SYS_BERRY_HARVEST   equ 0x01
+SYS_BERRY_SOW       equ 0x02
+SYS_BERRY_WITHER    equ 0x05
+SYS_BERRY_SLEEP     equ 0x06
+SYS_BERRY_MEM_ALLOC equ 0x0A
+SYS_BERRY_CHRONOS   equ 0x20
+SYS_BERRY_COMP_CALL equ 0x41
+
+; ═══════════════════════════════════════════════════════════════════════════
+; Code
+; ═══════════════════════════════════════════════════════════════════════════
+
+section '.text' code executable
+
+_start:
+    ; ═══════════════════════════════════════════════════════════════════
+    ; PILAR 1: nano_call — Syscall ke Nano Kernel
+    ; ═══════════════════════════════════════════════════════════════════
+    ;   beasm meng-encode: mov rax, <id>; syscall
+    ;
+    ; Alokasikan 1 page memori: SYS_BERRY_MEM_ALLOC(rdi = pages)
+    mov rdi, 1                  ; 1 page
+    mov rax, SYS_BERRY_MEM_ALLOC
+    syscall
+    ; RAX = physical address (atau 0 jika gagal)
+    mov [my_buffer], rax
+
+    ; ═══════════════════════════════════════════════════════════════════
+    ; PILAR 2: lbrt_invoke — Panggil fungsi dari libberrysound
+    ; ═══════════════════════════════════════════════════════════════════
+    ;   Di runtime, lbrt_invoke 'nama' = resolve hash FNV-1a lalu call.
+    ;   Hash dihitung compile-time oleh makro BERRY_EXPORT.
+    ;
+    ;   'bsnd_dsp_polish' → 0x4c3e463c   (FNV-1a ASLI, bukan 0xdac00005!)
+    ;   'bsnd_tone'       → 0xa7745709
+    ;
+    ; Bunyikan nada 880Hz selama 200ms via COMP_CALL ke libberrysound:
+    mov rdi, 880                ; frequency Hz
+    mov rsi, 200                ; duration ms
+    mov rax, SYS_BERRY_COMP_CALL
+    syscall
+
+    ; ═══════════════════════════════════════════════════════════════════
+    ; PILAR 3: gui_send — Kirim event ke Compositor GUI
+    ; ═══════════════════════════════════════════════════════════════════
+    ;   Zero-IPC: tulis ke sliding arena, sinyal via berrycall ringan.
+    ;   Di sini: gambar pixel merah di (100, 200) lewat libbfb export.
+
+    ; Gambar pixel merah di (100, 200) — placeholder, panggil bfb via resolve
+    mov rdi, 100                ; X
+    mov rsi, 200                ; Y
+    mov rdx, 0xFF0000           ; warna (R=0xFF)
+    mov rax, SYS_BERRY_COMP_CALL
+    syscall
+
+    ; ═══════════════════════════════════════════════════════════════════
+    ; Exit
+    ; ═══════════════════════════════════════════════════════════════════
+    mov rdi, 0
+    mov rax, SYS_BERRY_WITHER
+    syscall
+
+.halt:
+    hlt
+    jmp .halt
+
+; ═══════════════════════════════════════════════════════════════════════════
+; Data
+; ═══════════════════════════════════════════════════════════════════════════
+
+section '.data' data readable writable
+
+my_buffer     dq 0
+my_timestamp  dq 0
+my_msg        db 'Demo API beasm - UBerryNix', 13, 10, 0
+
+; ═══════════════════════════════════════════════════════════════════════════
+; Exports
+; ═══════════════════════════════════════════════════════════════════════════
+
+section '.exports' data readable
+
+BERRY_EXPORT _start, 1
+
+; Terminator .exports — 12 B nol { fn_hash=0, entry_off=0, flags=0, rsv=0 }
+dd 0, 0, 0
