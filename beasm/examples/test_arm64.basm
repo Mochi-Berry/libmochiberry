@@ -1,0 +1,16 @@
+arch arm64
+section .text
+
+_start:
+    mov x0, 0
+    mov x1, 42
+    add x2, x0, x1
+    sub x3, x1, x0
+    mov x0, 1
+    mov x1, 1
+    add x2, x1, x1
+    cmp x3, 42
+    mov x0, 1
+    svc 0
+    mov x0, 0
+    svc 0x900001

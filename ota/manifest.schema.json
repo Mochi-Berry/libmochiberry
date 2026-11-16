@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/gryzzlaycutzy121/libmochiberry/blob/master/ota/manifest.schema.json",
+  "title": "libmochiberry OTA manifest",
+  "description": "Contract between the OTA build (scripts/make-ota.sh) and the device updater. A device may swap any file listed here without re-coding the loader.",
+  "type": "object",
+  "required": ["format", "engine", "version", "abi", "files"],
+  "properties": {
+    "format": { "const": 1, "description": "Manifest format version." },
+    "engine": { "const": "libmochiberry" },
+    "version": { "type": "string", "pattern": "^[0-9A-Za-z._-]+$", "description": "Bundle version, also the output directory name." },
+    "engine_version": { "type": "string", "description": "Human-readable engine version string from `mbjs --version`." },
+    "abi": { "type": "string", "description": "Bytecode ABI tag. Devices must refuse bundles whose ABI differs from the loader's." },
+    "upgrade": {
+      "type": "object",
+      "description": "How the device should apply this bundle.",
+      "properties": {
+        "type": { "enum": ["swap", "full"], "default": "swap" },
+        "no_recode": { "const": true, "description": "Upgrades never require re-coding; files are swapped as-is." },
+        "rollback": { "type": "string", "default": "previous", "description": "Identifier of the bundle to roll back to on failure." }
+      }
+    },
+    "files": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["sha256", "size", "role"],
+        "properties": {
+          "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "size": { "type": "integer", "minimum": 0 },
+          "role": {
+            "enum": ["engine", "app-bytecode", "app-source", "patch", "manifest"],
+            "description": "engine: replaces libmochiberry.so; app-bytecode: the JS app; patch: pure-JS feature patch applied at boot."
+          }
+        }
+      }
+    }
+  }
+}

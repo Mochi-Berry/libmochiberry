@@ -1,0 +1,52 @@
+; ═══════════════════════════════════════════════════════════════════════════
+; mathlib.basm — Berry Dynamic Library (.bdl) untuk beasm
+; ═══════════════════════════════════════════════════════════════════════════
+;
+; Menguji: ekspor FNV-1a, relokasi CherryReva (referensi data absolut),
+; label + call antar-fungsi.
+;
+;   beasm mathlib.basm -o mathlib.bdl --format bdl --token BDL_00000
+;
+; ═══════════════════════════════════════════════════════════════════════════
+
+section '.text' code executable
+
+; ── lib_add(a, b) → rax = a + b ──
+lib_add:
+    mov rax, rdi
+    add rax, rsi
+    ret
+
+; ── lib_mul(a, b) → rax = a * b ──
+lib_mul:
+    mov rax, rdi
+    imul rax, rsi
+    ret
+
+; ── lib_get_name() → rax = pointer ke nama library ──
+lib_get_name:
+    ; movabs rax, lib_name  → relokasi ABS 8-byte (CherryReva)
+    mov rax, lib_name
+    ret
+
+; ── lib_counter() → rax = counter global ──
+lib_counter:
+    mov rax, [counter]
+    ret
+
+section '.rodata' data readable
+
+lib_name db 'mathlib.bdl by beasm', 0
+
+section '.data' data readable writable
+
+counter dq 42
+
+section '.exports' data readable
+
+BERRY_EXPORT lib_add, 1
+BERRY_EXPORT lib_mul, 1
+BERRY_EXPORT lib_get_name, 1
+BERRY_EXPORT lib_counter, 1
+
+dd 0, 0, 0

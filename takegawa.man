@@ -1,0 +1,195 @@
+.TH TAKEGAWA 1 "2026-11-07"
+.SH NAME
+takegawa - TGPM, the MochiBerry package manager
+
+.SH SYNOPSIS
+.SY takegawa
+.I COMMAND
+.RI [ ARG ].\|.\|.\&
+.RI [ OPTION ].\|.\|.
+.YS
+
+.SH DESCRIPTION
+\fBtakegawa\fR is TGPM, the package manager for MochiBerry.
+It is a separate tool from the engine and runs on it.
+.PP
+TGPM keeps packages in a single global, content-addressed store.
+Each package tree is hashed with SHA-256 and stored once; projects refer to the
+stored copy through a link (symlink or, on Windows, a directory junction).
+Installing the same package in many projects therefore consumes store space
+once instead of duplicating it in every project.
+.PP
+A copy mode is available for tools that expect a real
+\fBnode_modules\fR directory, and an existing \fBnode_modules\fR tree is also
+understood when resolving dependencies.
+
+.SH COMMANDS
+.TP
+.B install
+Install the dependencies declared in \fBtakegawa.json\fR (or
+\fBpackage.json\fR). With an argument, behaves like \fBadd\fR.
+
+.TP
+.BI add " PKG[@RANGE]"
+Add a dependency to the manifest, resolve it and install it.
+
+.TP
+.B init
+Create a minimal \fBtakegawa.json\fR (and \fBindex.js\fR if missing) in the
+current directory when no manifest exists.
+
+.TP
+.BI fetch " URL|FILE.tgz"
+Download (http/https) or read a local tarball, cache it under
+\fB$TAKEGAWA_HOME/cache\fR by content hash, extract it and print the
+resolved package. Remote specs may also be passed directly to \fBadd\fR or
+\fBinstall\fR, and a local package directory can be added with a
+\fBfile:\fR spec.
+
+.TP
+.BI exec " CMD [ARGS...]"
+Run a command with the project \fB.bin\fR directory and the global bin
+directory prepended to \fBPATH\fR, so package binaries resolve.
+
+.TP
+.BI remove " PKG"
+Remove a dependency from the manifest and unlink it from the project.
+
+.TP
+.B update
+Ignore the lockfile and re-resolve every dependency against the newest
+versions the manifest ranges allow.
+
+.TP
+.B resolve
+Print the resolved dependency tree without installing.
+
+.TP
+.B outdated
+List direct dependencies whose locked version is older than the newest
+version allowed by the manifest range.
+
+.TP
+.BI info " PKG[@RANGE]"
+Print the resolved metadata of a package: version, source, entry point,
+active export conditions and runtime dependencies.
+
+.TP
+.B verify
+Re-hash the store entries referenced by \fBtakegawa.lock\fR and report
+integrity mismatches.
+
+.TP
+.B gc
+Remove store entries that no lockfile under the current directory (or the
+given root) and no globally installed package reference. Use
+\fB\-\-dry\-run\fR to preview.
+
+.TP
+.B link
+Link the current package into the global store so other packages can use it.
+
+.TP
+.B pack
+Pack the current package into a \fB.tgz\fR archive.
+
+.TP
+.BI run " SCRIPT"
+Run a script from the manifest's \fBscripts\fR object.
+
+.TP
+.B store
+Print the global store, cache, global and registry locations.
+
+.TP
+.B doctor
+Check the environment, the manifest and filesystem capabilities.
+
+.TP
+.B version
+Print the TGPM version.
+
+.SH OPTIONS
+.TP
+.B \-g, \-\-global
+Operate on the global store.
+
+.TP
+.B \-\-node\-modules, \-\-copy
+Copy packages into \fBnode_modules\fR instead of linking them.
+
+.TP
+.B \-\-production
+Skip \fBdevDependencies\fR.
+
+.TP
+.B \-\-frozen\-lockfile
+Fail instead of updating \fBtakegawa.lock\fR; use in CI to guarantee a
+reproducible install.
+
+.TP
+.B \-\-update
+Ignore the lockfile and re-resolve (same as the \fBupdate\fR command).
+
+.TP
+.BI \-\-registry " DIR"
+Use \fIDIR\fR as the package registry instead of \fB$TAKEGAWA_HOME/registry\fR.
+
+.TP
+.BI \-\-home " DIR"
+Override \fB$TAKEGAWA_HOME\fR (default \fB~/.takegawa\fR).
+
+.SH THE MANIFEST
+The manifest is \fBtakegawa.json\fR (a \fBpackage.json\fR with a \fBname\fR and
+\fBversion\fR is also accepted). The \fBexports\fR field uses conditional
+exports; the \fBmbjs\fR condition is matched first, then \fBimport\fR, then
+\fBdefault\fR:
+.PP
+.EX
+{
+  "name": "@scope/pkg",
+  "version": "1.0.0",
+  "exports": {
+    ".": {
+      "mbjs": "./dist/mbjs/index.js",
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js",
+      "default": "./dist/index.js"
+    },
+    "./feature": "./dist/feature.js"
+  },
+  "dependencies": {
+    "foo": "^1.2.0"
+  },
+  "scripts": {
+    "test": "mbjs test.js"
+  }
+}
+.EE
+
+.SH STORE LAYOUT
+.PP
+.EX
+$TAKEGAWA_HOME/
+  store/<sha256>/          extracted package tree (content addressed)
+  cache/                   downloaded archives
+  registry/<name>/<ver>/   local registry
+  global/takegawa_modules/ globally installed packages
+  bin/                     shims for packages that declare "bin"
+  index.json               name -> version -> integrity index
+.EE
+
+.SH BINARIES
+When an installed package declares a \fBbin\fR field (a string or an object
+mapping command names to scripts), \fBtakegawa\fR writes a small executable
+shim into \fBtakegawa_modules/.bin\fR (project installs) or
+\fB$TAKEGAWA_HOME/bin\fR (global installs). The shim invokes the target
+script with \fBmbjs\fR, so package CLIs run through the normal runtime. Use
+\fBtakegawa exec\fR to run them with the bin directories already on
+\fBPATH\fR.
+
+.SH EXIT STATUS
+\fBtakegawa\fR exits with 0 on success and non-zero on failure.
+
+.SH SEE ALSO
+mbjs(1), mbjsc(1)

@@ -1,0 +1,154 @@
+; sys_ring0.basm — verifikasi instruksi sistem ring-0 (beasm)
+format bex
+
+section '.text' executable
+
+start:
+    ; --- MSR / TSC / CPUID ---
+    rdmsr
+    wrmsr
+    rdtsc
+    rdtscp
+    cpuid
+    xgetbv
+    xsetbv
+
+    ; --- control / debug registers ---
+    mov cr0, rax
+    mov cr3, rax
+    mov cr4, rax
+    mov rax, cr0
+    mov rax, cr3
+    mov rax, cr4
+    mov dr0, rax
+    mov dr7, rax
+    mov rax, dr0
+    mov rax, dr6
+    mov cr8, rax
+
+    ; --- I/O ports ---
+    in al, dx
+    in ax, dx
+    in eax, dx
+    in al, 0x60
+    in eax, 0x64
+    out dx, al
+    out dx, eax
+    out 0x60, al
+    out 0x64, eax
+
+    ; --- descriptor tables ---
+    lgdt [gdt_desc]
+    lidt [idt_desc]
+    sgdt [gdt_desc]
+    sidt [idt_desc]
+    lldt ax
+    ltr ax
+    sldt ax
+    str ax
+    invlpg [rax]
+
+    ; --- string ops dengan rep ---
+    cld
+    rep movsb
+    rep stosb
+    rep stosq
+    repne scasb
+    repe cmpsd
+    lodsb
+    lodsw
+    lodsd
+    lodsq
+    stosb
+    movsb
+    movsq
+    scasb
+    cmpsq
+    insb
+    insd
+    outsb
+    outsd
+
+    ; --- bit ops ---
+    bt rax, rbx
+    bts rax, 3
+    btr rax, rbx
+    btc rax, 5
+    bsf rcx, rax
+    bsr rcx, rax
+    bswap rax
+    bswap edx
+
+    ; --- atomic ---
+    lock cmpxchg [rdi], rax
+    cmpxchg [rdi], rbx
+    xadd [rdi], rcx
+    xadd eax, ebx
+    cmpxchg8b [rdi]
+    cmpxchg16b [rdi]
+
+    ; --- loop / jrcxz ---
+    mov rcx, 10
+.loop:
+    dec rcx
+    jnz .loop
+    mov rcx, 10
+.loop2:
+    dec rcx
+    loop .loop2
+    mov rcx, 5
+.rep:
+    dec rcx
+    jrcxz .done
+    jmp .rep
+.done:
+
+    ; --- shld/shrd ---
+    shld rax, rbx, 8
+    shld rax, rbx, cl
+    shrd rax, rbx, 16
+    shrd rax, rbx, cl
+
+    ; --- misc sistem ---
+    swapgs
+    sysret
+    sysenter
+    sysexit
+    iretq
+    wbinvd
+    invd
+    pause
+    mfence
+    lfence
+    sfence
+    clac
+    stac
+    endbr64
+    lahf
+    sahf
+    clc
+    stc
+    cmc
+    xlatb
+    rdpmc
+    rdrand rax
+    rdseed rbx
+    clflush [rax]
+    prefetcht0 [rax]
+    ud2
+
+    ret
+
+section '.rodata'
+gdt_desc:
+    dw 0xFFFF
+    dq gdt_base
+idt_desc:
+    dw 0xFFFF
+    dq idt_base
+gdt_base:
+    dq 0
+idt_base:
+    dq 0
+
+BERRY_EXPORT start

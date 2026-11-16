@@ -1,0 +1,177 @@
+; ═══════════════════════════════════════════════════════════════════════════
+; hello_bpp.basm — "Hello GUI!" .bpp (Berry Panel Program) untuk NullDE
+; ═══════════════════════════════════════════════════════════════════════════
+;
+; .bpp = aplikasi GUI STANDALONE yang dimuat DE via LBRT (BERRYCALL_BPP_LOAD
+; 0x142, bpp_loader.c).  Modul TIDAK dieksekusi sendiri: DE mem-dispatch
+; create/draw/key/mouse/close lewat tabel .hook (bb_bpp_api_t).  Satu-satunya
+; tautan ke DE/WM/DS = SERVICE TABLE yang disuntik saat bind (bb_bpp_services_t):
+; pointer fungsi polos (fill/frame/text/strlen/hfill/resize/call), ZERO syscall.
+;
+; Dirakit:
+;   beasm hello_bpp.basm -o hello_bpp.bpp --format bpp --win-w 320 --win-h 200
+;
+; Grammar biner: kernel/include/bpp_format.h — magic "BPP164\0\0", header
+; 24 B, tabel seksi 16 B, .hook berisi bb_bpp_api_t.
+;
+; ═══════════════════════════════════════════════════════════════════════════
+
+; ── Layout bb_bpp_api_t (pointer 64-bit) ──
+BPP_API_ABI_VER equ 0
+BPP_API_FLAGS   equ 4
+BPP_API_BIND    equ 8
+BPP_API_CREATE  equ 16
+BPP_API_DRAW    equ 24
+BPP_API_KEY     equ 32
+BPP_API_MOUSE   equ 40
+BPP_API_CLOSE   equ 48
+BPP_API_INFO    equ 56
+
+; ── Layout bb_bpp_ctx_t (natural alignment) ──
+BPP_CTX_X      equ 8
+BPP_CTX_Y      equ 12
+BPP_CTX_W      equ 16
+BPP_CTX_H      equ 20
+BPP_CTX_FB     equ 48
+BPP_CTX_FB_W   equ 56
+BPP_CTX_FB_H   equ 60
+BPP_CTX_SVC    equ 80
+
+; ── Layout bb_bpp_services_t ──
+BPP_SVC_FILL   equ 8
+BPP_SVC_FRAME  equ 16
+BPP_SVC_TEXT   equ 24
+
+; ═══════════════════════════════════════════════════════════════════════════
+; .hook — API table aplikasi (bb_bpp_api_t)
+; ═══════════════════════════════════════════════════════════════════════════
+
+section '.hook' data readable
+
+api_table:
+    dd 1            ; abi_version = BPP_ABI_VERSION (1)
+    dd 0            ; flags: bit0 = single-instance
+    dq app_bind     ; bind(ctx)
+    dq app_create   ; create(ctx)
+    dq app_draw     ; draw(ctx)
+    dq app_key      ; key(ctx, keysym, ascii)
+    dq app_mouse    ; mouse(ctx, x, y, buttons)
+    dq app_close    ; close(ctx)
+    dq app_info     ; info(buf, max)
+
+; ═══════════════════════════════════════════════════════════════════════════
+; .text — hook implementation (dipanggil DE via tabel .hook)
+; ═══════════════════════════════════════════════════════════════════════════
+
+section '.text' code executable
+
+; ── bind(ctx): simpan svc, tidak ada state ──
+app_bind:
+    ret
+
+; ── create(ctx): jendela baru dibuka ──
+app_create:
+    ret
+
+; ── draw(ctx): gambar client area via service table (svc->fill/frame/text) ──
+;   rdi = ctx
+;   svc = ctx->svc;  fill = svc->fill;  text = svc->text
+app_draw:
+    push rbp
+    mov rbp, rsp
+    push rbx
+    push r12
+    push r13
+    push r14
+    push r15
+
+    mov r12, rdi            ; r12 = ctx
+    mov r13, [r12 + BPP_CTX_SVC]   ; r13 = svc (bb_bpp_services_t*)
+
+    ; ── latar: svc->fill(ctx, 0, 0, w, h, 0x0C0C16) ──
+    mov rax, [r13 + BPP_SVC_FILL]  ; svc->fill
+    mov rdi, r12
+    xor esi, esi
+    xor edx, edx
+    mov rcx, [r12 + BPP_CTX_W]
+    mov r8,  [r12 + BPP_CTX_H]
+    mov r9,  0x0C0C16
+    call rax
+
+    ; ── bingkai: svc->frame(ctx, 0, 0, w, h, 0x2ECC71) ──
+    mov rax, [r13 + BPP_SVC_FRAME]
+    mov rdi, r12
+    xor esi, esi
+    xor edx, edx
+    mov rcx, [r12 + BPP_CTX_W]
+    mov r8,  [r12 + BPP_CTX_H]
+    mov r9,  0x2ECC71
+    call rax
+
+    ; ── teks: svc->text(ctx, 8, 8, "Hello Berry GUI!", 0xFFFFFF, 1) ──
+    mov rax, [r13 + BPP_SVC_TEXT]
+    mov rdi, r12
+    mov esi, 8
+    mov edx, 8
+    lea rcx, [rel hello_str]
+    mov r8,  0xFFFFFF
+    mov r9,  1
+    call rax
+
+    pop r15
+    pop r14
+    pop r13
+    pop r12
+    pop rbx
+    pop rbp
+    ret
+
+; ── key(ctx, keysym, ascii): abaikan (tidak ada interaksi) ──
+app_key:
+    ret
+
+; ── mouse(ctx, x, y, buttons): abaikan ──
+app_mouse:
+    ret
+
+; ── close(ctx): jendela ditutup ──
+app_close:
+    ret
+
+; ── info(buf, max): deskripsi aplikasi ──
+;   rdi = buf, rsi = max
+app_info:
+    lea rsi, [rel info_str]
+.info_loop:
+    mov al, [rsi]
+    test al, al
+    jz .info_done
+    mov [rdi], al
+    inc rdi
+    inc rsi
+    jmp .info_loop
+.info_done:
+    xor eax, eax
+    mov [rdi], al
+    ret
+
+; ═══════════════════════════════════════════════════════════════════════════
+; .rodata — string
+; ═══════════════════════════════════════════════════════════════════════════
+
+section '.rodata' data readable
+
+hello_str db 'Hello Berry GUI!', 0
+info_str  db 'hello_bpp — contoh .bpp dari beasm', 0
+
+; ═══════════════════════════════════════════════════════════════════════════
+; .manifest — TLV (opsional; judul jendela default)
+; ═══════════════════════════════════════════════════════════════════════════
+
+section '.manifest' data readable
+
+    dw 0x0020   ; BPP_TAG_TITLE
+    dw 11       ; panjang judul
+    db 'Hello Berry', 0
+    dw 0xFFFF   ; BPP_TAG_TERMINATOR
+    dw 0
