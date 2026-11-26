@@ -509,3 +509,6 @@ MIT — see `LICENSE`. This fork builds on the work of Fabrice Bellard, Charlie
 Gordon, Ben Noordhuis, Saúl Ibarra Corretgé and the QuickJS community.
 
 [ECMAScript]: https://tc39.es/ecma262/
+
+# Mochi Berry Chan (Mascot Chan)
+![mochi chan](archanaberry/mochichan.png)
