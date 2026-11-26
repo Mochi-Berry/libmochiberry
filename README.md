@@ -14,6 +14,9 @@ QJS_       →  MBJS_            (build options, env vars)
 quickjs    →  mbjs             (files, docs, module specifiers)
 ```
 
+# Mochi Berry
+![Mochi Bewwy](archanaberry/mochiberry.png)
+
 ## What this repo gives you
 
 | Piece | Where | What it is |
