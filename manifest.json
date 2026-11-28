@@ -1,0 +1,21 @@
+{
+  "name": "libmochiberry",
+  "version": "0.1.0",
+  "layer": "source_repository",
+  "description": "MochiBerry engine \u2014 embeddable C runtime with the JS engine, module loader and builtin library",
+  "status": "source",
+  "entry": null,
+  "layers": {
+    "js": "./node_modules/libmochiberry/manifest.json",
+    "native": "./mochi_modules/libmochiberry/manifest.json"
+  },
+  "abi_version": "MBC1",
+  "native_entry": null,
+  "runtime_exports": [],
+  "build": {
+    "engine_include": "$ENGINE_INC",
+    "lib_dir": null,
+    "output": null,
+    "link_libs": []
+  }
+}

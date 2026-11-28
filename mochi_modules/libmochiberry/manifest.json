@@ -1,0 +1,18 @@
+{
+  "layer": "source_repo",
+  "name": "libmochiberry",
+  "version": "0.1.0",
+  "description": "MochiBerry engine \u2014 embeddable C runtime with the JS engine, module loader and builtin library",
+  "entry_point": null,
+  "status": "source",
+  "exports": [],
+  "sources": [],
+  "headers": [],
+  "build": "cmake -S . -B build && cmake --build build",
+  "artifacts": [
+    "build/mbjs (the engine executable)",
+    "build/libmochiberry.* (embeddable library)"
+  ],
+  "consumers": "the per-module repos under Mochi-Berry build against this engine's headers (mbjs.h, mbjs_runtime.h)",
+  "note": "This repository is the engine source. It ships no prebuilt binary and no JavaScript package; the two layer directories exist so every repo in the org has the same shape and the loader can resolve them uniformly."
+}

@@ -1,28 +1,12 @@
 {
   "name": "libmochiberry",
-  "version": "0.0.3_alpha",
+  "version": "0.1.0",
+  "description": "MochiBerry engine \u2014 embeddable C runtime with the JS engine, module loader and builtin library",
+  "license": "MIT",
   "private": true,
-  "packageName": "my.berrylabfoundation.mochiberry",
-  "description": "MBJS — a mighty, embeddable JavaScript engine (libmochiberry), rebranded from QuickJS, Berry-OS, baremetal, OTA, AOT and JIT ready.",
-  "type": "commonjs",
-  "scripts": {
-    "install": "make -j4",
-    "build": "make -j4 && sh scripts/build-libmochiberry.sh",
-    "dev": "node server.js",
-    "start": "node server.js",
-    "preview": "node server.js",
-    "test": "make test",
-    "memtest": "make memtest",
-    "patchtest": "make patchtest",
-    "jittest": "make jittest",
-    "nativetest": "make nativetest",
-    "purify": "sh scripts/purify.sh --check",
-    "ota": "sh scripts/make-ota.sh",
-    "native": "sh scripts/build-native.sh examples/app_mochiberry.js dist/mochiberry-native",
-    "cross": "sh scripts/cross-build.sh",
-    "baremetal-check": "make baremetal-check"
-  },
-  "engines": {
-    "node": ">=16"
+  "sourceRepository": true,
+  "layers": {
+    "js": "./node_modules/libmochiberry/manifest.json",
+    "native": "./mochi_modules/libmochiberry/manifest.json"
   }
 }
